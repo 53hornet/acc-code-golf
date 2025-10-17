@@ -60,13 +60,14 @@ Now you just need to make the solver. Write a tool which creates these calculati
 - _You must work together!_ Pair programming in teams of two. Talk about the problem together, code together, present your solution together.
 - You may use any language, framework, library, etc. 
 - You may use AI tools, but tell us so we can see how you used them effectively!
-- Everyone has the same amount of time: the end of the summit on Thursday.
+- Everyone has the same amount of time: the end of the summit on Wednesday.
 
 ## Submitting a solution
 
-1. Check out this repository
+1. Check out this repository and make a branch or fork
 2. Add all of your code but no third party code, e.g., `node_modules`. Put that stuff in .gitignore if you want to.
-3. Create a PR against this repository with both your names in the title
+3. Write the game results table output to the CONTRIBUTING.md. Include timings results from [`time(1)`](https://man.freebsd.org/cgi/man.cgi?time) or [`Measure-Command`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/measure-command?view=powershell-7.5).
+4. Create a PR against this repository with both your names in the title
 
 We'll use Github to measure lines of code and languages used.
 
@@ -82,7 +83,7 @@ To win, your solution must produce the correct results and satisfy at least one 
 
 People's choice will be put to a vote at the end of the competition. Everyone gets to pick their favorite solution, completely subjective.
 
-The winners will be announced EOD Thursday.
+The winners will be announced EOD Wednesday.
 
 ## Get to it! 
 
