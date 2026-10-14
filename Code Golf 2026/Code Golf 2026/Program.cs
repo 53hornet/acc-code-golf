@@ -144,12 +144,11 @@ void DefaultCompressionTest(string inputPath, string outputPath)
     input.CopyTo(compressor);
 }
 
-//C:\CodeGolf2026
-
-const string inputPath = "C:\\CodeGolf2026\\azara.pgm";
-const string textPath = "C:\\CodeGolf2026\\azara_compressed.txt";
-const string binaryPath = "C:\\CodeGolf2026\\azara_compressed.bin";
-const string defaultCompressionPath = "C:\\CodeGolf2026\\azara_compressed_stdlib";
+const string relativePathToBaseRepo = "../../../../../";
+string inputPath = Path.Combine(relativePathToBaseRepo, "azara.pgm");
+string textPath = Path.Combine(relativePathToBaseRepo, "azara_compressed.txt");
+string binaryPath = Path.Combine(relativePathToBaseRepo, "azara_compressed.bin");
+string defaultCompressionPath = Path.Combine(relativePathToBaseRepo, "azara_compressed_stdlib");
 
 var file = ReadPgmFile(inputPath);
 WriteCompressedFile(textPath, file.Rows);
