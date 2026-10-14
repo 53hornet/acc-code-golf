@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Code_Golf_2026;
+﻿namespace Code_Golf_2026;
 
 public class FrequencyMap
 {
-    public static IEnumerable<(byte,PixelGrouping)> GetHighFrequencyGroupings(List<PixelGrouping> pixelGroupings)
+    public static IEnumerable<(byte, PixelGrouping)> GetHighFrequencyGroupings(List<PixelGrouping> pixelGroupings)
     {
         var grouped = pixelGroupings.GroupBy(x => (x.Value, x.Count));
         var orderedGroups = grouped.OrderBy(x => x.Count());
@@ -24,10 +17,10 @@ public class FrequencyMap
         foreach (var group in orderedGroups)
         {
             //Console.WriteLine($"{group.Key.Value}, {group.Key.Count}, {group.Count()}");
-            if(group.Count() > 3)
+            if (group.Count() > 3)
             {
                 Console.WriteLine($"{group.Key.Value}");
-                if(code > 0)
+                if (code > 0)
                 {
                     yield return new(code, new PixelGrouping { Value = group.Key.Value, Count = group.Key.Count });
                 }

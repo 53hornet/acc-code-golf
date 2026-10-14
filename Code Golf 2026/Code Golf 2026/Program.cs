@@ -1,8 +1,7 @@
-using System.IO.Compression;
-using System.Runtime.InteropServices;
 using Code_Golf_2026;
+using System.IO.Compression;
 
-(int Width, int Height, int MaxValue, List<List<PixelGrouping>> Rows) ReadPgmFile(string pgmFilePath)
+PgmFile ReadPgmFile(string pgmFilePath)
 {
     // P2 allows pixels to wrap across lines and comments anywhere, so read a token stream
     var tokens = File.ReadLines(pgmFilePath)
@@ -10,24 +9,27 @@ using Code_Golf_2026;
         .SelectMany(l => l.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
         .ToList();
 
-    // tokens[0] is the "P2" magic number
-    int width = int.Parse(tokens[1]);
-    int height = int.Parse(tokens[2]);
-    int maxPixelValue = int.Parse(tokens[3]);
-
-    var imageRows = new List<List<PixelGrouping>>();
-    for (int y = 0; y < height; y++)
+    var file = new PgmFile
     {
-        imageRows.Add(ProcessPgmRow(tokens.GetRange(4 + y * width, width)));
+        Variant = Enum.Parse<PgmVariant>(tokens[0].ToUpper()),
+        Width = int.Parse(tokens[1]),
+        Height = int.Parse(tokens[2]),
+        MaxValue = int.Parse(tokens[3]),
+        Rows = []
+    };
+
+    for (int y = 0; y < file.Height; y++)
+    {
+        file.Rows.Add(ProcessPgmRow(tokens.GetRange(4 + y * file.Width, file.Width)));
     }
 
-    return (width, height, maxPixelValue, imageRows);
+    return file;
 }
 
 List<PixelGrouping> ProcessPgmRow(List<string> row)
 {
+    List<PixelGrouping> pixelGroupings = [];
     int? previousPixelValue = null;
-    var pixelGroupings = new List<PixelGrouping>();
     foreach (var pixelText in row)
     {
         int pixel = int.Parse(pixelText);
@@ -72,7 +74,7 @@ void WriteBinaryCompressedFile(string outputFilePath, int width, int height, int
     var highestGroupings = FrequencyMap.GetHighFrequencyGroupings(pixelGroupings).ToList();
     writer.Write7BitEncodedInt(short.MaxValue);
     FrequencyMap.TrySomething(pixelGroupings);
-    foreach(var grouping in highestGroupings)
+    foreach (var grouping in highestGroupings)
     {
         writer.Write7BitEncodedInt(grouping.Item1);
         writer.Write7BitEncodedInt(grouping.Item2.Value);
@@ -91,7 +93,7 @@ void WriteBinaryCompressedFile(string outputFilePath, int width, int height, int
             int? n2 = pixelGrouping.Count;
 
             var highestGrouping = highestGroupings.FirstOrDefault(x => x.Item2.Value == pixelGrouping.Value && x.Item2.Count == pixelGrouping.Count);
-            if(highestGrouping != default)
+            if (highestGrouping != default)
             {
                 //Console.WriteLine($"found value {highestGrouping.Item2.Value}");
                 n1 = highestGrouping.Item1;
@@ -143,17 +145,18 @@ void DefaultCompressionTest(string inputPath, string outputPath)
 }
 
 //C:\CodeGolf2026
+
 const string inputPath = "C:\\CodeGolf2026\\azara.pgm";
 const string textPath = "C:\\CodeGolf2026\\azara_compressed.txt";
 const string binaryPath = "C:\\CodeGolf2026\\azara_compressed.bin";
 const string defaultCompressionPath = "C:\\CodeGolf2026\\azara_compressed_stdlib";
 
-var (width, height, maxValue, rows) = ReadPgmFile(inputPath);
-WriteCompressedFile(textPath, rows);
-WriteBinaryCompressedFile(binaryPath, width, height, maxValue, rows);
+var file = ReadPgmFile(inputPath);
+WriteCompressedFile(textPath, file.Rows);
+WriteBinaryCompressedFile(binaryPath, file.Width, file.Height, file.MaxValue, file.Rows);
 DefaultCompressionTest(inputPath, defaultCompressionPath);
 
-FrequencyMap.GetHighFrequencyGroupings(rows.SelectMany(x => x).ToList());
+FrequencyMap.GetHighFrequencyGroupings(file.Rows.SelectMany(x => x).ToList());
 // Verify the binary file round-trips to the original pixels
 //var decoded = ReadBinaryCompressedFile(binaryPath);
 //var original = File.ReadLines(inputPath)
