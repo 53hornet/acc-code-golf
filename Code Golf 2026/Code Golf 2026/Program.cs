@@ -155,7 +155,7 @@ WriteCompressedFile(textPath, file.Rows);
 WriteBinaryCompressedFile(binaryPath, file.Width, file.Height, file.MaxValue, file.Rows);
 DefaultCompressionTest(inputPath, defaultCompressionPath);
 
-FrequencyMap.GetHighFrequencyGroupings(file.Rows.SelectMany(x => x).ToList());
+FrequencyMap.GetHighFrequencyGroupings([.. file.Rows.SelectMany(x => x)]);
 // Verify the binary file round-trips to the original pixels
 //var decoded = ReadBinaryCompressedFile(binaryPath);
 //var original = File.ReadLines(inputPath)
