@@ -135,12 +135,12 @@ string inputPath = Path.Combine(relativePathToBaseRepo, "azara.pgm");
 string textPath = Path.Combine(relativePathToBaseRepo, "azara_compressed.txt");
 string binaryPath = Path.Combine(relativePathToBaseRepo, "azara_compressed.bin");
 string defaultCompressionPath = Path.Combine(relativePathToBaseRepo, "azara_compressed_stdlib");
+string huffmanPath = Path.Combine(relativePathToBaseRepo, "azara_compressed_huffman.bin");
 
 var file = ReadPgmFile(inputPath);
 WriteBinaryCompressedFile(binaryPath, file);
 DefaultCompressionTest(inputPath, defaultCompressionPath);
 
-string huffmanPath = Path.Combine(relativePathToBaseRepo, "azara_compressed_huffman.bin");
 HuffmanCodec.Write(huffmanPath, file);
 var decoded = HuffmanCodec.Read(huffmanPath);
 var expected = file.Rows.Select(r => r.SelectMany(g => Enumerable.Repeat(g.Value, g.Count)).ToArray()).ToArray();
