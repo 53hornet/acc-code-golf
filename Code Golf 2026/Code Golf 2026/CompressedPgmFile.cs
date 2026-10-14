@@ -1,6 +1,6 @@
 ﻿namespace Code_Golf_2026;
 
-public class PgmFile
+public class CompressedPgmFile
 {
     public PgmVariant Variant { get; set; }
     public int Width { get; set; }

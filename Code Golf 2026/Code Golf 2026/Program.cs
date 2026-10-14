@@ -1,7 +1,7 @@
 using Code_Golf_2026;
 using System.IO.Compression;
 
-PgmFile ReadPgmFile(string pgmFilePath)
+CompressedPgmFile ReadPgmFile(string pgmFilePath)
 {
     // P2 allows pixels to wrap across lines and comments anywhere, so read a token stream
     var tokens = File.ReadLines(pgmFilePath)
@@ -9,7 +9,7 @@ PgmFile ReadPgmFile(string pgmFilePath)
         .SelectMany(l => l.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
         .ToList();
 
-    var file = new PgmFile
+    var file = new CompressedPgmFile
     {
         Variant = Enum.Parse<PgmVariant>(tokens[0].ToUpper()),
         Width = int.Parse(tokens[1]),
@@ -47,30 +47,16 @@ List<PixelGrouping> ProcessPgmRow(List<string> row)
     return pixelGroupings;
 }
 
-void WriteCompressedFile(string outputFilePath, List<List<PixelGrouping>> compressedData)
-{
-    using var writer = new StreamWriter(outputFilePath);
-    foreach (var row in compressedData)
-    {
-        foreach (var pixelGrouping in row)
-        {
-            writer.Write($"{pixelGrouping.Value} {pixelGrouping.Count} ");
-        }
-        writer.WriteLine();
-    }
-}
-
-void WriteBinaryCompressedFile(string outputFilePath, int width, int height, int maxValue,
-    List<List<PixelGrouping>> compressedData)
+void WriteBinaryCompressedFile(string outputFilePath, CompressedPgmFile file)
 {
     using var writer = new BinaryWriter(File.Create(outputFilePath));
 
     // Header, so the file can be decoded
-    writer.Write7BitEncodedInt(width);
-    writer.Write7BitEncodedInt(height);
-    writer.Write7BitEncodedInt(maxValue);
+    writer.Write7BitEncodedInt(file.Width);
+    writer.Write7BitEncodedInt(file.Height);
+    writer.Write7BitEncodedInt(file.MaxValue);
 
-    var pixelGroupings = compressedData.SelectMany(x => x).ToList();
+    var pixelGroupings = file.Rows.SelectMany(x => x).ToList();
     var highestGroupings = FrequencyMap.GetHighFrequencyGroupings(pixelGroupings).ToList();
     writer.Write7BitEncodedInt(short.MaxValue);
     FrequencyMap.TrySomething(pixelGroupings);
@@ -85,7 +71,7 @@ void WriteBinaryCompressedFile(string outputFilePath, int width, int height, int
     //https://codegolf.stackexchange.com/questions/276277/zigzag-encoding-and-decoding
     //.net apparently sees a negative number and freaks out thinking it's gigantic when doing Write7BitEncodedInt
     //by doing this zigzag it prevents that and can actually right a 2 byte int instead
-    foreach (var row in compressedData)
+    foreach (var row in file.Rows)
     {
         foreach (var pixelGrouping in row)
         {
@@ -151,8 +137,7 @@ string binaryPath = Path.Combine(relativePathToBaseRepo, "azara_compressed.bin")
 string defaultCompressionPath = Path.Combine(relativePathToBaseRepo, "azara_compressed_stdlib");
 
 var file = ReadPgmFile(inputPath);
-WriteCompressedFile(textPath, file.Rows);
-WriteBinaryCompressedFile(binaryPath, file.Width, file.Height, file.MaxValue, file.Rows);
+WriteBinaryCompressedFile(binaryPath, file);
 DefaultCompressionTest(inputPath, defaultCompressionPath);
 
 FrequencyMap.GetHighFrequencyGroupings([.. file.Rows.SelectMany(x => x)]);
@@ -166,7 +151,6 @@ FrequencyMap.GetHighFrequencyGroupings([.. file.Rows.SelectMany(x => x)]);
 //    && decoded.Zip(original).All(p => p.First.SequenceEqual(p.Second));
 
 Console.WriteLine($"Original PGM:   {new FileInfo(inputPath).Length,9:N0} bytes");
-Console.WriteLine($"Text RLE:       {new FileInfo(textPath).Length,9:N0} bytes");
 Console.WriteLine($"Binary RLE:     {new FileInfo(binaryPath).Length,9:N0} bytes");
 Console.WriteLine($"stdlib:         {new FileInfo(defaultCompressionPath).Length,9:N0} bytes");
 //Console.WriteLine($"Round trip OK:  {roundTrips}");
