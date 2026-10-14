@@ -1,3 +1,5 @@
+### PHASE TWO IS LIVE! SEE BELOW!
+
 # ACC hosts a code golf (again)
 
 You're an artist, Bob.
@@ -63,7 +65,11 @@ The output should stay 0. If it's any other number, check `compare.gif` to see w
 
 ## Part 2
 
-Unlike last year, there will be a part 2 "edge case" revealed after the first day of the summit. Those who think ahead and build a future-proof design will be rewarded. You will need to re-submit your solution if it doesn't work with the edge case.
+### THERE IS A PART 2.
+
+You'll now find [azara.ppm](./azara.ppm) in this repo. It's a slightly different format, the plaintext color flavor. Your solution must also compress and decompress this image using the same commands as your first one. 
+
+Those who thought through a future-proof design probably don't need to make any changes. You will need to re-submit your solution if it doesn't work with the edge case.
 
 ## Judging and winning
 
