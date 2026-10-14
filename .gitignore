@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Azara.CodeGolf2026/.vs
+/Azara.CodeGolf2026/Azara.CodeGolf2026/bin/Debug/net10.0
+/Azara.CodeGolf2026/Azara.CodeGolf2026/obj
