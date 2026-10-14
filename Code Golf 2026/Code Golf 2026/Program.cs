@@ -140,6 +140,13 @@ var file = ReadPgmFile(inputPath);
 WriteBinaryCompressedFile(binaryPath, file);
 DefaultCompressionTest(inputPath, defaultCompressionPath);
 
+string huffmanPath = Path.Combine(relativePathToBaseRepo, "azara_compressed_huffman.bin");
+HuffmanCodec.Write(huffmanPath, file);
+var decoded = HuffmanCodec.Read(huffmanPath);
+var expected = file.Rows.Select(r => r.SelectMany(g => Enumerable.Repeat(g.Value, g.Count)).ToArray()).ToArray();
+bool huffmanRoundTrips = decoded.Pixels.Length == expected.Length
+    && decoded.Pixels.Zip(expected).All(p => p.First.SequenceEqual(p.Second));
+
 FrequencyMap.GetHighFrequencyGroupings([.. file.Rows.SelectMany(x => x)]);
 // Verify the binary file round-trips to the original pixels
 //var decoded = ReadBinaryCompressedFile(binaryPath);
@@ -152,5 +159,6 @@ FrequencyMap.GetHighFrequencyGroupings([.. file.Rows.SelectMany(x => x)]);
 
 Console.WriteLine($"Original PGM:   {new FileInfo(inputPath).Length,9:N0} bytes");
 Console.WriteLine($"Binary RLE:     {new FileInfo(binaryPath).Length,9:N0} bytes");
+Console.WriteLine($"Huffman RLE:    {new FileInfo(huffmanPath).Length,9:N0} bytes (round trip OK: {huffmanRoundTrips})");
 Console.WriteLine($"stdlib:         {new FileInfo(defaultCompressionPath).Length,9:N0} bytes");
 //Console.WriteLine($"Round trip OK:  {roundTrips}");
