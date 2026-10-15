@@ -6,3 +6,6 @@
 /Azara.CodeGolf2026/.vs
 /Azara.CodeGolf2026/Azara.CodeGolf2026/bin/Debug/net10.0
 /Azara.CodeGolf2026/Azara.CodeGolf2026/obj
+/Azara.CodeGolf2026/**/bin
+/Azara.CodeGolf2026/**/obj
+/compare.gif
