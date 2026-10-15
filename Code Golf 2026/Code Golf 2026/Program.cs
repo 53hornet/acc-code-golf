@@ -45,15 +45,15 @@ List<PixelGrouping> ProcessPgmRow(List<string> row)
     return pixelGroupings;
 }
 
-void WritePgmFile(string path, (int Width, int Height, int MaxValue, int[][] Pixels) image)
+void WritePgmFile(string path, CompressedPgmFile file)
 {
     using var writer = new StreamWriter(path);
-    writer.WriteLine("P2");
-    writer.WriteLine($"{image.Width} {image.Height}");
-    writer.WriteLine(image.MaxValue);
-    foreach (var row in image.Pixels)
+    writer.WriteLine(file.Variant);
+    writer.WriteLine($"{file.Width} {file.Height}");
+    writer.WriteLine(file.MaxValue);
+    foreach (var row in file.Rows)
     {
-        writer.WriteLine(string.Join(' ', row));
+        writer.WriteLine(string.Join(' ', row.SelectMany(g => Enumerable.Repeat(g.Value, g.Count))));
     }
 }
 

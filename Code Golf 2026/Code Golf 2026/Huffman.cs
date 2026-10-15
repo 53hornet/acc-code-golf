@@ -18,6 +18,7 @@ public static class HuffmanCodec
         var codes = table.ToDictionary(t => t.Symbol, t => (t.Code, t.Length));
 
         using var writer = new BinaryWriter(File.Create(path));
+        writer.Write7BitEncodedInt((int)file.Variant);
         writer.Write7BitEncodedInt(file.Width);
         writer.Write7BitEncodedInt(file.Height);
         writer.Write7BitEncodedInt(file.MaxValue);
@@ -51,12 +52,16 @@ public static class HuffmanCodec
         }
     }
 
-    public static (int Width, int Height, int MaxValue, int[][] Pixels) Read(string path)
+    public static CompressedPgmFile Read(string path)
     {
         using var reader = new BinaryReader(File.OpenRead(path));
-        int width = reader.Read7BitEncodedInt();
-        int height = reader.Read7BitEncodedInt();
-        int maxValue = reader.Read7BitEncodedInt();
+        var decodedFile = new CompressedPgmFile
+        {
+            Variant = (PgmVariant)reader.Read7BitEncodedInt(),
+            Width = reader.Read7BitEncodedInt(),
+            Height = reader.Read7BitEncodedInt(),
+            MaxValue = reader.Read7BitEncodedInt()
+        };
 
         int symbolCount = reader.Read7BitEncodedInt();
         var lengths = new List<(Symbol Symbol, int Length)>();
@@ -79,11 +84,11 @@ public static class HuffmanCodec
             return (buffer >> --bitsLeft) & 1;
         }
 
-        var image = new int[height][];
-        for (int y = 0; y < height; y++)
+        var rows = new List<List<PixelGrouping>>(decodedFile.Height);
+        for (int y = 0; y < decodedFile.Height; y++)
         {
-            image[y] = new int[width];
-            for (int x = 0; x < width;)
+            var row = new List<PixelGrouping>();
+            for (int x = 0; x < decodedFile.Width;)
             {
                 uint code = 0;
                 int length = 0;
@@ -94,11 +99,14 @@ public static class HuffmanCodec
                     length++;
                 } while (!lookup.TryGetValue((length, code), out symbol));
 
-                Array.Fill(image[y], symbol.Value, x, symbol.Count);
+                row.Add(new PixelGrouping { Value = symbol.Value, Count = symbol.Count });
                 x += symbol.Count;
             }
+            rows.Add(row);
         }
-        return (width, height, maxValue, image);
+
+        decodedFile.Rows = rows;
+        return decodedFile;
     }
 
     private static List<(Symbol Symbol, int Length)> BuildCodeLengths(List<Symbol> runs)
