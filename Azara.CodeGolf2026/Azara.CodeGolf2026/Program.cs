@@ -157,14 +157,17 @@ namespace Azara.CodeGolf2026
             var items = pixelSequences.Select(s => new List<Tuple<int, int>> { s }).ToList();
             var compressedSequences = CollapseRepeats(CollapseRepeats(items)).SelectMany(i => i).ToList();
 
+            var symbols = new List<byte>();
             foreach (var tuple in compressedSequences)
             {
                 // the first 2 bits are the palette index (or 3 for a repeat marker)
                 // the second 6 bits is the sequence length
 
                 var packedValue = (tuple.Item1 << 6) | ((tuple.Item2 - (tuple.Item1 == 3 ? 1 : 2)) & 0x3F);
-                writer.Write((byte)packedValue);
+                symbols.Add((byte)packedValue);
             }
+
+            writer.Write(HuffmanEncode(symbols.ToArray()));
 
             writer.Flush();
             writer.Close();
@@ -192,9 +195,9 @@ namespace Azara.CodeGolf2026
                 palette.Add(reader.ReadBytes(channels).Select(b => (int)b).ToArray());
             }
 
-            while (input.Position < input.Length)
+            var symbols = HuffmanDecode(reader.ReadBytes((int)(input.Length - input.Position)));
+            foreach (var packedValue in symbols)
             {
-                var packedValue = reader.ReadByte();
                 var colorIndex = (packedValue >> 6) & 0x03; // Extract the first 2 bits
                 var sequenceLength = (packedValue & 0x3F) + (colorIndex == 3 ? 1 : 2); // Extract the last 6 bits
 
@@ -212,6 +215,144 @@ namespace Azara.CodeGolf2026
             reader.Close();
             input.Close();
             return expandedSequences;
+        }
+
+        // Huffman codes: frequent bytes get short bit codes, rare bytes get long ones.
+        // Only the code length of each byte value is stored (4 bits each); both sides rebuild the same codes from those.
+        internal static byte[] HuffmanEncode(byte[] data)
+        {
+            var frequencies = new int[256];
+            foreach (var b in data)
+            {
+                frequencies[b]++;
+            }
+
+            var lengths = CodeLengths(frequencies);
+            var codes = CanonicalCodes(lengths);
+
+            var output = new MemoryStream();
+            var writer = new BinaryWriter(output);
+            for (int i = 0; i < 256; i += 2)
+            {
+                writer.Write((byte)(lengths[i] | lengths[i + 1] << 4));
+            }
+            writer.Write7BitEncodedInt(data.Length);
+
+            // Bits are written most significant first; only the low (bitCount + 15) bits of the buffer matter
+            int buffer = 0, bitCount = 0;
+            foreach (var b in data)
+            {
+                buffer = buffer << lengths[b] | codes[b];
+                bitCount += lengths[b];
+                while (bitCount >= 8)
+                {
+                    bitCount -= 8;
+                    writer.Write((byte)(buffer >> bitCount));
+                }
+            }
+            if (bitCount > 0)
+            {
+                writer.Write((byte)(buffer << (8 - bitCount)));
+            }
+
+            writer.Flush();
+            return output.ToArray();
+        }
+
+        internal static byte[] HuffmanDecode(byte[] encoded)
+        {
+            var reader = new BinaryReader(new MemoryStream(encoded));
+            var lengths = new int[256];
+            for (int i = 0; i < 256; i += 2)
+            {
+                var packed = reader.ReadByte();
+                lengths[i] = packed & 0x0F;
+                lengths[i + 1] = packed >> 4;
+            }
+            var count = reader.Read7BitEncodedInt();
+
+            var codes = CanonicalCodes(lengths);
+            var symbols = Enumerable.Range(0, 256).Where(s => lengths[s] > 0).ToDictionary(s => (lengths[s], codes[s]), s => (byte)s);
+
+            // Read a bit at a time until the bits so far match a code (no code is the start of another)
+            var output = new byte[count];
+            int code = 0, length = 0, buffer = 0, bitCount = 0, n = 0;
+            while (n < count)
+            {
+                if (bitCount == 0)
+                {
+                    buffer = reader.ReadByte();
+                    bitCount = 8;
+                }
+                code = code << 1 | (buffer >> --bitCount & 1);
+                length++;
+
+                if (symbols.TryGetValue((length, code), out var symbol))
+                {
+                    output[n++] = symbol;
+                    code = 0;
+                    length = 0;
+                }
+            }
+
+            return output;
+        }
+
+        // Builds the Huffman tree by repeatedly merging the two rarest groups; every merge adds a bit to each symbol in them
+        static int[] CodeLengths(int[] frequencies)
+        {
+            while (true)
+            {
+                var lengths = new int[256];
+                var queue = new PriorityQueue<List<int>, int>();
+                for (int s = 0; s < 256; s++)
+                {
+                    if (frequencies[s] > 0)
+                    {
+                        queue.Enqueue(new List<int> { s }, frequencies[s]);
+                    }
+                }
+
+                // A lone symbol still needs a 1-bit code
+                if (queue.Count == 1)
+                {
+                    lengths[queue.Peek()[0]] = 1;
+                }
+
+                while (queue.Count > 1)
+                {
+                    queue.TryDequeue(out var a, out var aFrequency);
+                    queue.TryDequeue(out var b, out var bFrequency);
+                    a.AddRange(b);
+                    foreach (var s in a)
+                    {
+                        lengths[s]++;
+                    }
+                    queue.Enqueue(a, aFrequency + bFrequency);
+                }
+
+                if (lengths.Max() <= 15)
+                {
+                    return lengths;
+                }
+
+                // Too deep to store in 4 bits, so flatten the frequencies and build again
+                frequencies = frequencies.Select(f => f == 0 ? 0 : (f + 1) / 2).ToArray();
+            }
+        }
+
+        // Canonical codes: sorted by length then symbol, each code is the previous one plus 1, shifted left when the length grows
+        static int[] CanonicalCodes(int[] lengths)
+        {
+            var codes = new int[256];
+            int code = 0, previousLength = 0;
+            foreach (var s in Enumerable.Range(0, 256).Where(s => lengths[s] > 0).OrderBy(s => lengths[s]))
+            {
+                code <<= lengths[s] - previousLength;
+                codes[s] = code++;
+                previousLength = lengths[s];
+            }
+            return codes;
         }
 
         // Collapses consecutive identical items into a repeat marker followed by the item.

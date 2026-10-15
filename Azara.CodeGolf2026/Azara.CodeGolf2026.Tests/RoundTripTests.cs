@@ -46,9 +46,12 @@ namespace Azara.CodeGolf2026.Tests
                 .Select(int.Parse).Take(width * height * channels).ToArray();
         }
 
-        // Super sequences show up as two marker bytes in a row (index 3 in the top 2 bits)
-        static bool HasSuperSequence(byte[] packed, int headerLength) =>
-            packed.Skip(headerLength).Zip(packed.Skip(headerLength + 1)).Any(p => p.First >> 6 == 3 && p.Second >> 6 == 3);
+        // Super sequences show up as two marker symbols in a row (index 3 in the top 2 bits), once the Huffman bits are decoded
+        static bool HasSuperSequence(byte[] packed, int headerLength)
+        {
+            var symbols = Program.HuffmanDecode(packed[headerLength..]);
+            return symbols.Zip(symbols.Skip(1)).Any(p => p.First >> 6 == 3 && p.Second >> 6 == 3);
+        }
 
         static string FindRepoFile(string name)
         {
@@ -267,6 +270,59 @@ namespace Azara.CodeGolf2026.Tests
             Assert.Equal(runs, Expand(stream));
             // Markers must fit in 6 bits as count - 1 (1..64)
             Assert.All(stream.Where(t => t.Item1 == 3), t => Assert.InRange(t.Item2, 1, 64));
+        }
+    }
+
+    public class HuffmanTests
+    {
+        static void AssertRoundTrips(byte[] data)
+        {
+            Assert.Equal(data, Program.HuffmanDecode(Program.HuffmanEncode(data)));
+        }
+
+        [Fact]
+        public void Empty_RoundTrips() => AssertRoundTrips([]);
+
+        [Fact]
+        public void SingleSymbol_RoundTrips() => AssertRoundTrips([.. Enumerable.Repeat((byte)42, 1000)]);
+
+        [Fact]
+        public void TwoSymbols_RoundTrip() => AssertRoundTrips([0, 255, 255, 0, 255]);
+
+        [Fact]
+        public void AllByteValues_RoundTrip() => AssertRoundTrips([.. Enumerable.Range(0, 256).Select(i => (byte)i)]);
+
+        [Theory]
+        [InlineData(1, 10)]
+        [InlineData(2, 5000)]
+        [InlineData(3, 100_000)]
+        public void RandomBytes_RoundTrip(int seed, int length)
+        {
+            var data = new byte[length];
+            new Random(seed).NextBytes(data);
+            AssertRoundTrips(data);
+        }
+
+        [Fact]
+        public void FibonacciFrequencies_StayWithin15Bits_AndRoundTrip()
+        {
+            // Fibonacci counts build the deepest possible tree (one symbol per level), which would need codes longer than 15 bits.
+            // A length over 15 would be cut off by its 4-bit slot in the table, so a clean round trip proves the limit held.
+            var data = new List<byte>();
+            int a = 1, b = 1;
+            for (int s = 0; s < 25; s++)
+            {
+                data.AddRange(Enumerable.Repeat((byte)s, a));
+                (a, b) = (b, a + b);
+            }
+            AssertRoundTrips([.. data.OrderBy(_ => Random.Shared.Next())]);
+        }
+
+        [Fact]
+        public void SkewedData_IsSmallerThanOneBytePerSymbol()
+        {
+            var data = Enumerable.Range(0, 10_000).Select(i => (byte)(i % 10 == 0 ? i % 7 : 63)).ToArray();
+            Assert.True(Program.HuffmanEncode(data).Length < data.Length / 2);
         }
     }
 }
