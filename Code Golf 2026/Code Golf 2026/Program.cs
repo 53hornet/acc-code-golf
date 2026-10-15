@@ -75,7 +75,8 @@ void WritePgmFile(string path, CompressedPgmFile file)
         var samples = row
             .SelectMany(g => Enumerable.Repeat(g.Value, g.Count))
             .SelectMany(pixel => Enumerable.Range(0, channelWidth)
-                .Select(c => (pixel >> (8 * (channelWidth - 1 - c))) & mask));
+            .Select(c => (pixel >> (8 * (channelWidth - 1 - c))) & mask));
+
         writer.WriteLine(string.Join(' ', samples));
     }
 }
