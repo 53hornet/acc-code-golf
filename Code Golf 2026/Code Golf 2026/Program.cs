@@ -73,7 +73,7 @@ switch (command)
         HuffmanCodec.Write(outputPath, ReadPgmFile(inputPath));
         break;
     case "decode":
-        //WritePgmFile(outputPath, HuffmanCodec.Read(inputPath));
+        WritePgmFile(outputPath, HuffmanCodec.Read(inputPath));
         break;
 }
 
