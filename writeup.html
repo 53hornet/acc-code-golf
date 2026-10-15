@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compressing azara.pgm to 541 bytes</title>
+<style>
+.viz-root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface-1: #fcfcfb;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --grid: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --ord-1: #104281; --ord-2: #1c5cab; --ord-3: #2a78d6; --ord-4: #5598e7; --ord-5: #86b6ef;
+  --glyph: #5d5c57;
+  --wash: rgba(42,120,214,0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface-1: #1a1a19;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --ord-1: #cde2fb; --ord-2: #9ec5f4; --ord-3: #6da7ec; --ord-4: #3987e5; --ord-5: #1c5cab;
+    --glyph: #898781;
+    --wash: rgba(57,135,229,0.14);
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface-1: #1a1a19;
+  --text-primary: #f0efec;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --grid: #2c2c2a;
+  --baseline: #383835;
+  --border: rgba(255,255,255,0.10);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --ord-1: #cde2fb; --ord-2: #9ec5f4; --ord-3: #6da7ec; --ord-4: #3987e5; --ord-5: #1c5cab;
+  --glyph: #898781;
+  --wash: rgba(57,135,229,0.14);
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.viz-root {
+  background: var(--page); color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.55; font-size: 16px; min-height: 100vh;
+}
+main { max-width: 880px; margin: 0 auto; padding: 48px 24px 96px; }
+h1 { font-size: 34px; line-height: 1.2; margin: 0 0 8px; font-weight: 650; }
+h2 { font-size: 23px; margin: 56px 0 8px; font-weight: 650; }
+h3 { font-size: 17px; margin: 28px 0 4px; font-weight: 650; }
+p, li { color: var(--text-secondary); }
+p strong, li strong { color: var(--text-primary); }
+.lede { font-size: 18px; margin: 0 0 28px; }
+code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.9em;
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; color: var(--text-primary); }
+pre { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; }
+pre code { border: 0; padding: 0; background: none; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin: 18px 0; }
+.card-title { font-weight: 650; margin: 0 0 2px; color: var(--text-primary); }
+.card-sub { font-size: 14px; color: var(--text-muted); margin: 0 0 16px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 24px 0; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+.tile .label { font-size: 14px; color: var(--text-muted); }
+.tile .value { font-size: 28px; font-weight: 650; }
+.tile .note { font-size: 13px; color: var(--text-secondary); }
+.hero { font-size: 64px; font-weight: 700; line-height: 1; margin: 8px 0 4px; }
+.hero small { font-size: 22px; font-weight: 600; color: var(--text-secondary); }
+/* bars */
+.bars { display: grid; grid-template-columns: max-content 1fr; column-gap: 12px; row-gap: 6px; align-items: center; }
+.bars .name { font-size: 14px; color: var(--text-secondary); text-align: right; white-space: nowrap; }
+.bars .track { position: relative; height: 22px; display: flex; align-items: center; border-left: 1px solid var(--baseline); }
+.bars .bar { height: 20px; border-radius: 0 4px 4px 0; background: var(--series-1); }
+.bars .bar.copy { background: var(--series-2); }
+.bars .val { font-size: 13px; color: var(--text-primary); margin-left: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bars .group { grid-column: 1 / -1; font-size: 13px; font-weight: 650; color: var(--text-muted); margin-top: 8px; text-transform: lowercase; letter-spacing: .02em; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--text-secondary); margin: 0 0 14px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; background: var(--c); vertical-align: -1px; }
+.stack { display: flex; gap: 2px; height: 22px; margin: 8px 0 10px; }
+.stack div { height: 100%; }
+.stack div:first-child { border-radius: 4px 0 0 4px; }
+.stack div:last-child { border-radius: 0 4px 4px 0; }
+details { margin-top: 12px; font-size: 14px; }
+summary { cursor: pointer; color: var(--text-muted); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; margin-top: 8px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); }
+th { color: var(--text-muted); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin: 16px 0; }
+.flow .step { flex: 1 1 130px; background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--text-secondary); position: relative; }
+.flow .step b { display: block; color: var(--text-primary); font-size: 14px; margin-bottom: 2px; }
+.flow .step .n { display: inline-block; width: 20px; height: 20px; border-radius: 10px; background: var(--wash); color: var(--text-primary); font-size: 12px; text-align: center; line-height: 20px; margin-bottom: 6px; font-weight: 650; }
+.figrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+figure { margin: 0; }
+figure img { width: 100%; image-rendering: pixelated; border-radius: 8px; border: 1px solid var(--border); display: block; }
+figcaption { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+.ramp { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); margin-top: 10px; flex-wrap: wrap; }
+.ramp i { display: inline-block; width: 26px; height: 12px; }
+svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.tip { position: fixed; pointer-events: none; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0,0,0,.12); border-radius: 8px; padding: 8px 10px; font-size: 13px; max-width: 280px; opacity: 0; transition: opacity .08s; z-index: 10; }
+[data-tip] { cursor: default; }
+.callout { border-left: 3px solid var(--series-1); padding: 4px 0 4px 14px; margin: 16px 0; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+<main>
+
+<h1>Compressing azara.pgm to 541 bytes</h1>
+<p class="lede">How our compressor shrinks the 689 KB Azara logo image to 541 bytes, without losing a single pixel, and why each idea was worth its bytes.</p>
+
+<div class="hero">541 <small>bytes</small></div>
+<p style="margin-top:0">That's <strong>1,273× smaller</strong> than the original. It decompresses to exactly the same pixels, and <code>magick compare</code> reports <code>0 (0)</code>.</p>
+
+<div class="tiles">
+  <div class="tile"><div class="label">Original azara.pgm</div><div class="value">688,896 B</div><div class="note">plain-text pixel values</div></div>
+  <div class="tile"><div class="label">First version (run-length)</div><div class="value">4,424 B</div><div class="note">156× smaller</div></div>
+  <div class="tile"><div class="label">This version</div><div class="value">541 B</div><div class="note">1,273× smaller · ~4 s to compress, ~2 s to decompress</div></div>
+  <div class="tile"><div class="label">Part 2: azara.ppm (color)</div><div class="value">550 B</div><div class="note">from 2,053,972 B · 3,734× smaller</div></div>
+</div>
+
+<h2>What's in the image</h2>
+<p>The image is 792 × 404 pixels (319,968 in total), but it holds much less information than that suggests:</p>
+<ul>
+  <li><strong>Only 3 gray values</strong> are used: black (0), the darker gray of "azara" (80) and the lighter gray of the leaf, "r" and "healthcare" (133).</li>
+  <li><strong>89% of the pixels are black</strong> background.</li>
+  <li><strong>The two grays never touch.</strong> There's always black between them. So the real question for each pixel is "background or not?", and the shade is almost always obvious from the neighbors.</li>
+  <li><strong>Letters repeat.</strong> "azara" has three a's, and "healthcare" has two each of h, e and a. Some copies are almost pixel-identical.</li>
+</ul>
+
+<h2>The core idea: predict, then pay only for surprises</h2>
+<p>The compressor visits the pixels one at a time. For each one, a model looks at everything already decoded and predicts a probability, for example "97% sure this pixel is background". An <strong>arithmetic coder</strong> turns those predictions into bits: a confident, correct guess costs a tiny fraction of a bit, while a surprise costs several bits. The decoder runs exactly the same model, makes exactly the same predictions, and so can read the bits back.</p>
+
+<div class="card">
+  <p class="card-title">How the arithmetic coder spends bits</p>
+  <p class="card-sub">Each pixel shrinks the coder's current range to the share its prediction gave the real outcome. Narrowing by half costs 1 bit.</p>
+  <svg id="ac" viewBox="0 0 820 230" width="100%" role="img" aria-label="Three examples of the coder's range shrinking: a confident correct guess, a fairly sure correct guess, and a surprise."></svg>
+</div>
+
+<p>So the whole game is <strong>making better predictions</strong>. Every idea below is just a better way to guess the next pixel.</p>
+
+<h2>The pipeline</h2>
+<div class="flow">
+  <div class="step"><span class="n">1</span><b>Palette</b>Map the 3 grays to indices. The most common, black, becomes background (0).</div>
+  <div class="step"><span class="n">2</span><b>Orientation</b>Try all 8 flips and rotations, and keep whichever compresses best.</div>
+  <div class="step"><span class="n">3</span><b>Find copies</b>Spot letters that nearly match an earlier one and note where the copy is.</div>
+  <div class="step"><span class="n">4</span><b>Predict</b>For each pixel: background or not? Then which gray?</div>
+  <div class="step"><span class="n">5</span><b>Code</b>Arithmetic-code every decision, header included, into one stream.</div>
+</div>
+
+<h3>1. Looking at the neighbors</h3>
+<p>The simplest predictor is the pattern of already-decoded pixels around the current one. We keep five nested neighborhoods, from the 6 nearest pixels out to 36. Each one keeps its own count of what came next every time that exact pattern appeared before. Small neighborhoods learn fast; large ones capture the shapes of curves, but only once they've seen enough examples.</p>
+<div class="card">
+  <p class="card-title">The five neighborhood patterns</p>
+  <p class="card-sub">Each shade adds one ring of pixels around the current pixel (?). Pixels to its right on the current row aren't decoded yet, so they can't be used.</p>
+  <svg id="tpl" viewBox="0 0 520 210" width="100%" style="max-width:560px" role="img" aria-label="A grid showing the 6, 10, 16, 24 and 36 pixel neighborhoods around the current pixel"></svg>
+  <div class="legend" id="tpl-legend"></div>
+</div>
+
+<h3>2. Following edges</h3>
+<p>Letters are smooth curves, so an edge drifts predictably from one row to the next. For the nearest edge in the row above, the model follows it back up to four rows and records how far it moved each time, such as "left 1, then left 2, then left 2". That history, plus how far the current pixel is from where the edge should land, becomes another context. This is how the model learns curvature without needing a huge neighborhood.</p>
+<div class="card">
+  <p class="card-title">Predicting where an edge lands</p>
+  <p class="card-sub">The edge moved −1, −2, −2 over the last rows, so it's expected 2 pixels further left: right at the current pixel.</p>
+  <svg id="edge" viewBox="0 0 560 200" width="100%" style="max-width:600px" role="img" aria-label="An edge moving left across four rows, with the predicted position highlighted in the current row"></svg>
+</div>
+
+<h3>3. Copying repeated letters</h3>
+<p>Before coding, the compressor looks for shapes that nearly match an earlier one: same size, and few differing pixels at the best alignment. For each match it sends a small rectangle and an offset. Inside that rectangle the model also gets to look at the matching pixels of the earlier copy, so a near-duplicate costs almost nothing.</p>
+<div class="figrow">
+  <figure><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAH8AAACAAQMAAAAYtyScAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURfz8+7m4sDZmHvQAAAAHdElNRQfqCg4UHCQQP0/2AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDI2LTEwLTE0VDIwOjIyOjUzKzAwOjAwjGI5WAAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyNi0xMC0xNFQyMDoyODozNiswMDowMH5KNw0AAAAodEVYdGRhdGU6dGltZXN0YW1wADIwMjYtMTAtMTRUMjA6Mjg6MzYrMDA6MDApXxbSAAABtklEQVRIx73WPXaEIBAAYHgUlB6Bo3g0zM02NyFVWrcj75GdCPMDzMa4VWxcP50BdEbXmBe3ADAdLwDwGI4t1G2fL5guiQ3gNkcMMQtBGcbETaUA2OYUAAnBCVBWL5BVTh5mbdG+zzXiqSDjRkzvBPhHpIlYThZoeY7H9x2SGX/wiRqbaPGGs+8IfO8iQhBYGYpAHnbtVB4u/A0WhMh37oByAvzE/AnAC7D9A/TtGpZLCJewaogKLCjwGqKCCBPYuR+4vIs6FrCqtltxj+B09T+1Ax9+EkgD+V7j2GAMkeMZgDufwMmbgMBLUxME6WmCFXoHFR5EPX0u9g63EWx/byC4flsE9gm8Llyva6x3qcBDQ5khPEO+hH2GdXxJnkA6hXAJ6yXEM5B5gAJ7CrxaB2r5HtQdWzQEhv4qVM8lYqUJWPhm2GjUL6pFWszSYadB7i3acYlF+GjRjr4Rx/69RVsq2yP523EutypMOAuLFYqd5WskQq3kZBsjSI9mAunJvV6c+4fxSI0gbbzV6Dw0viHgPi4tXTYyTG6TyUayJlmo69/WyF+H+X2EMWkAo/4G1KnMx39vP55095VgkD+oAAAAAElFTkSuQmCC" alt="The third a, coded first"><figcaption><strong>The 3rd "a"</strong> happens to be decoded first in the chosen scan order, so it's coded from scratch.</figcaption></figure>
+  <figure><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAH8AAACAAgMAAABfF15MAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURfz8+7m4sOtoNBQ708EAAAAHdElNRQfqCg4UHCQQP0/2AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDI2LTEwLTE0VDIwOjIyOjUzKzAwOjAwjGI5WAAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyNi0xMC0xNFQyMDoyODozNiswMDowMH5KNw0AAAAodEVYdGRhdGU6dGltZXN0YW1wADIwMjYtMTAtMTRUMjA6Mjg6MzYrMDA6MDApXxbSAAAB4klEQVRYw9XXwXXDIAwGYMh7XHrXEp2CbkDfQz10BE/RJTpCDtmyL7ZjS78EJHEu5RbzIQlsq3UILx2Rr6M9z+uoveXcDiLmvRjvJAEXC1gPMz8BKIMAJoQFU3OLLkgjQBZw7mfQ+7hlqDLa9882fzqrNbEFqg5oAdacoUZR1LJiv3DBs3VBNaBqoG5f1MC5e/qSPfplHyoegHQXyN4PuSh74e4FQQLy3hR5NHeBgoAeAfwSkP89cMdxwEdBPAzSCNAAmIbgBugA4i7YmqYLZMt0gG7JpT9tgO3HpbscAcx/nQFgfAN4AAgBPHJmA/hMQoASEKjpuq3ZQDLTAEgmd8BeYg4uSGZ5sE0M583bzfiCWwA3X4DoJFAguY+XAaENyH0+EeQOcDMI8PbL3n9eAMoREN0ah+B01iB0QHoOiEaa3GMYgngYpMOAHgT2HHgA4sMge5vo3W5CULwaOyAaAAexdoxJhPNKaINr0E8AGTN87IkJi5g/JRAwAvGwJ8xxBVWcX2KdY3lWxO4jNLnl13K1zpdZhVhLmt/pdR3Lg6VVS3DrtHVv20WB9eTlyKr/Ol84e9y59gvO1xEQiX0QAOCf1WLOL9kM8CVkSsSbmGwAaOIEFdiBCZqiOb/sqzP9/PgD2mIPzaVf03wAAAAASUVORK5CYII=" alt="First a compared to the third a"><figcaption><strong>The 1st "a" against it:</strong> only 15 pixels differ (orange, drawn 3× larger so they're visible). Coding it costs 13 bytes instead of ~100.</figcaption></figure>
+  <figure><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAH8AAACAAgMAAABfF15MAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURfz8+7m4sOtoNBQ708EAAAAHdElNRQfqCg4UHCQQP0/2AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDI2LTEwLTE0VDIwOjIyOjUzKzAwOjAwjGI5WAAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyNi0xMC0xNFQyMDoyODozNiswMDowMH5KNw0AAAAodEVYdGRhdGU6dGltZXN0YW1wADIwMjYtMTAtMTRUMjA6Mjg6MzYrMDA6MDApXxbSAAACOklEQVRYw7WXO5KcMBCGJVUp4AA6AvdQ6kwBTeGN5iiT+gC6r41B8PcDqVyz7mgLfeq/XzSzzn2redrt8TjQaUvv+l9bu/effCQE6KXOJ+KmAHFOZeBAxVklQPkpxWYbA6IG1oEC0buvwEvRFBasGAaRWO6TDqLyK1EWM8gHVVTCy+JOIsqo2lP5jVmNQORpJDUBnl8xBoDlGYwhS3jH6+YdYTHgxYGI7Yp6Po5LGQHXAWZjBAMCyXpTMK6kk9BAkUCFh9UC8Jb5Lv4zkD8BwvcA708A24ZAHQH0KeBHwDQC4gioA0AtBNNBB6jUBdqaswFcmQYws1Va+scK0PuYA5H6gHHOAPVJkgMjzxcxckkCYiZVAnJohYPiBBC4/HWnWCku4PQC6nW8MtWiQszOBC4FORQF/pbnasOQfMEBCGbzAfAifgUcMb6egVlHyIFkzicAVZRIAaYCANZHUQOlA1gfRQ3kDjDpPrTcAHAdINoAMWAdAboMYQT4ETCNgPgxkEZAHdWBqF9JPwImCbwFMAMwWfOQJPCyYsSJKlaMCFi/5NhUi0KcO2kDPaXwUwBZKvy4O1BVEPuDXzeQZBB74isM+yw1dpcL1C8S1zhmBbL3fMkdOy0fT792J+eWW0Dgj3pbv/kq/Fm3etIBgLZpt/vTVRgQSVm+/GZn/odz9yPf3QfbbuEM3WUK7WG+R5QrtMiyMzQK1A+rfdkbKpKddrFBTxoQtYMzj9blKiLQJgUeicfzI6/F/Qf7DYgLE6Zl0gp1AAAAAElFTkSuQmCC" alt="Second a compared to the third a"><figcaption><strong>The 2nd "a"</strong> is rendered slightly differently, so 131 pixels differ along its edges. The copy still helps, but less.</figcaption></figure>
+</div>
+
+<h3>4. Mixing all the predictions</h3>
+<p>That gives 13 separate predictions for every pixel: five neighborhood patterns, five edge-based contexts and three copy-based contexts. A small learned mixer (logistic mixing, the core of the PAQ family of compressors) combines them into one probability. It learns as it goes which inputs to trust in which situation. One set of weights is picked by the 6-pixel neighborhood, another by how well the reference letter agrees locally, and the two results are averaged.</p>
+<div class="card">
+  <p class="card-title">From 13 guesses to one probability</p>
+  <svg id="mix" viewBox="0 0 820 220" width="100%" role="img" aria-label="Diagram: three groups of inputs feed two mixers whose outputs are averaged into one probability, which goes to the arithmetic coder"></svg>
+</div>
+<p>Each input doesn't use its raw counts directly. A context seen "3 times, always background" is mapped through a learned table to a probability, so the model learns from experience how much to trust a pattern it has only seen a few times. On a small image, where most patterns are rare, this mattered a lot.</p>
+
+<h3>5. Choosing the scan direction</h3>
+<p>Where the coder starts and which way it scans changes what it knows at each pixel. The encoder simply tries all 8 flips and rotations in parallel and keeps the smallest. Here the winner scans <strong>column by column, from the right edge</strong>. That's also why the 3rd "a" is the one coded from scratch.</p>
+<div class="card">
+  <p class="card-title">Compressed size for each of the 8 scan orders</p>
+  <p class="card-sub">Bytes. All within 6% of each other; the smallest is kept and recorded in 3 bits of the header.</p>
+  <div class="bars" id="orient"></div>
+  <details><summary>Show data table</summary><table id="orient-table"></table></details>
+</div>
+
+<h2>Where the 541 bytes go</h2>
+<div class="card">
+  <p class="card-title">Byte budget</p>
+  <p class="card-sub">Measured from the real coder: the cost of every decision, added up.</p>
+  <div class="legend" id="budget-legend"></div>
+  <div class="stack" id="budget"></div>
+  <details><summary>Show data table</summary><table id="budget-table"></table></details>
+</div>
+
+<p>Almost everything goes on shape, and within shape, almost all of it goes on edges. Picking the gray costs under 5 bytes in total, because it's nearly always the same as a neighbor's. The black background, 89% of the image, costs about 5 bytes.</p>
+
+<div class="card">
+  <p class="card-title">Bit cost of every pixel</p>
+  <p class="card-sub">Brighter means more expensive. Background and the inside of letters cost almost nothing; the bits are spent along edges. The 1st "a" is nearly dark because it was copied.</p>
+  <figure><img src="data:image/png;base64,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" alt="Heatmap of per-pixel coding cost over the logo" style="border-radius:8px"></figure>
+  <div class="ramp">cheaper <i style="background:#1c5cab"></i><i style="background:#2a78d6"></i><i style="background:#5598e7"></i><i style="background:#86b6ef"></i><i style="background:#b7d3f6"></i><i style="background:#ffffff;border:1px solid var(--border)"></i> more expensive &nbsp;(0.02 bits → 2.5+ bits per pixel)</div>
+</div>
+
+<div class="card">
+  <p class="card-title">Bytes spent per letter</p>
+  <p class="card-sub">Includes the background within 4 pixels of each letter. Copies are much cheaper than the letter they copy.</p>
+  <div class="legend"><span style="--c:var(--series-1)">Coded from scratch</span><span style="--c:var(--series-2)">Copied from an earlier letter</span></div>
+  <div class="bars" id="glyphs"></div>
+  <details><summary>Show data table</summary><table id="glyph-table"></table></details>
+</div>
+
+<h2>How we got here</h2>
+<p>Each idea was first tested by adding up its ideal bit cost in a quick prototype, and kept only if the number went down. The figures below cover the shape part only ("background or not?"); the final file adds the gray choice, the header and the copy rectangles.</p>
+<div class="card">
+  <p class="card-title">Estimated shape cost as each idea was added</p>
+  <p class="card-sub">Bytes. The final real file is 541 bytes in total, of which shape is 484.</p>
+  <div class="bars" id="prog"></div>
+  <details><summary>Show data table</summary><table id="prog-table"></table></details>
+</div>
+<p>A few things we tried didn't help: fitting edges with a curve (second-order extrapolation) was worse than a straight line, and giving the mixer a separate input for every copy offset made the other letters more expensive. The copies only paid off once each one was limited to its own rectangle.</p>
+
+<h2>Built to survive Part 2</h2>
+<ul>
+  <li><strong>Nothing about this image is hard-coded.</strong> Size, max value, palette, scan order and letter copies are all worked out from the input and stored in the header.</li>
+  <li><strong>Any number of grays</strong>, including 16-bit images with values up to 65535. Comments are allowed anywhere.</li>
+  <li><strong>Color took one small change.</strong> For plain-text <code>P3</code>, each RGB pixel is packed into a single number, so the palette and coder work unchanged. One header bit records gray or color. <code>azara.ppm</code> also has just 3 colors (black, gray <code>75 81 89</code> and green <code>13 172 102</code>), so it compresses to 550 bytes, only 9 more than the gray version.</li>
+  <li><strong>Deterministic decoding.</strong> Probabilities pass through integer lookup tables, so the decoder makes bit-identical predictions on any machine.</li>
+  <li><strong>One code path.</strong> A single function walks the pixels for both compressing and decompressing, so the two can't drift apart.</li>
+</ul>
+<div class="card">
+  <p class="card-title">Round trips on made-up test images</p>
+  <table>
+    <tr><th>Image</th><th class="num">Original</th><th class="num">Compressed</th><th>Result</th></tr>
+    <tr><td>1 × 1 pixel</td><td class="num">25 B</td><td class="num">5 B</td><td>✓ exact</td></tr>
+    <tr><td>One flat color, 20 × 10</td><td class="num">434 B</td><td class="num">6 B</td><td>✓ exact</td></tr>
+    <tr><td>256-level random noise, 40 × 30</td><td class="num">4,351 B</td><td class="num">1,246 B</td><td>✓ exact</td></tr>
+    <tr><td>16-bit values (max 65535)</td><td class="num">699 B</td><td class="num">44 B</td><td>✓ exact</td></tr>
+    <tr><td>3 × 50, 10 colors</td><td class="num">371 B</td><td class="num">94 B</td><td>✓ exact</td></tr>
+  </table>
+  <p class="card-sub" style="margin:10px 0 0">Limitation: only plain-text <code>P2</code> and <code>P3</code> input is read, not binary <code>P5</code> or <code>P6</code>.</p>
+</div>
+
+<h2>Ideas left on the table</h2>
+<ul>
+  <li><strong>The copy rectangles cost 40 bytes</strong> (about 8 per letter). Coding them relative to the letter they copy could save most of that.</li>
+  <li><strong>The settings were tuned on this one image.</strong> A different image might prefer other learning rates or neighborhood sizes. The encoder could try a few and record the choice in the header.</li>
+  <li><strong>Binary P5/P6 input</strong> would only take a few more lines to support.</li>
+</ul>
+
+<h2>Running it</h2>
+<pre><code>uv run golf.py c azara.pgm azara.compressed.pgm
+uv run golf.py d azara.compressed.pgm azara.final.pgm
+magick compare -metric rmse azara.pgm azara.final.pgm compare.gif   # prints 0 (0)
+
+uv run golf.py c azara.ppm azara.compressed.ppm
+uv run golf.py d azara.compressed.ppm azara.final.ppm
+magick compare -metric rmse azara.ppm azara.final.ppm compare.gif   # prints 0 (0)</code></pre>
+<p>Pure Python with only the standard library. It was built with Claude Code: we prototyped each modeling idea, measured its bit cost, and kept what helped before writing the final codec.</p>
+
+</main>
+<div class="tip" id="tip"></div>
+</div>
+
+<script>
+const css = n => getComputedStyle(document.querySelector('.viz-root')).getPropertyValue(n).trim();
+const tip = document.getElementById('tip');
+function bindTips(root) {
+  root.querySelectorAll('[data-tip]').forEach(el => {
+    el.addEventListener('mouseenter', () => { tip.innerHTML = el.dataset.tip; tip.style.opacity = 1; });
+    el.addEventListener('mousemove', e => {
+      const r = tip.getBoundingClientRect();
+      let x = e.clientX + 14, y = e.clientY + 14;
+      if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+      if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+      tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    });
+    el.addEventListener('mouseleave', () => { tip.style.opacity = 0; });
+  });
+}
+const fmt = v => v.toLocaleString('en-US', {maximumFractionDigits: 1});
+
+// ---- horizontal bar chart (single baseline, value at tip)
+function bars(id, rows, max, unit = ' B') {
+  const el = document.getElementById(id);
+  el.innerHTML = rows.map(r => r.group ? `<div class="group">${r.group}</div>` :
+    `<div class="name">${r.name}</div><div class="track" data-tip="${r.tip || `<b>${r.name}</b><br>${fmt(r.v)}${unit}`}">
+       <div class="bar ${r.copy ? 'copy' : ''}" style="width:calc(${(r.v / max) * 100}% - 70px * ${r.v / max})"></div><span class="val">${fmt(r.v)}${unit}</span></div>`).join('');
+  bindTips(el);
+}
+function table(id, head, rows) {
+  document.getElementById(id).innerHTML = '<tr>' + head.map((h, i) => `<th class="${i ? 'num' : ''}">${h}</th>`).join('') + '</tr>' +
+    rows.map(r => '<tr>' + r.map((c, i) => `<td class="${i ? 'num' : ''}">${c}</td>`).join('') + '</tr>').join('');
+}
+
+// ---- orientation
+const orient = [
+  ['Rows, top to bottom', 561], ['Rows, bottom to top', 547], ['Rows, top to bottom, right to left', 544], ['Rows, rotated 180°', 552],
+  ['Columns, left to right', 571], ['Columns, right to left', 541], ['Columns, left to right, bottom up', 575], ['Columns, right to left, bottom up', 542]];
+bars('orient', orient.map(([n, v]) => ({name: n + (v === 541 ? ' ✓' : ''), v})), 575);
+table('orient-table', ['Scan order', 'Bytes'], orient.map(([n, v]) => [n, v]));
+
+// ---- byte budget
+const budget = [
+  ['Shape (background or not)', 483.6, '--series-1'],
+  ['Copy rectangles', 40.5, '--series-2'],
+  ['Header (size, palette, scan order)', 11.4, '--series-3'],
+  ['Which gray', 4.8, '--series-4']];
+const total = budget.reduce((a, b) => a + b[1], 0);
+document.getElementById('budget-legend').innerHTML = budget.map(([n, v, c]) => `<span style="--c:var(${c})">${n} · ${fmt(v)} B</span>`).join('');
+const st = document.getElementById('budget');
+st.innerHTML = budget.map(([n, v, c]) => `<div style="flex:${v};background:var(${c})" data-tip="<b>${n}</b><br>${fmt(v)} bytes · ${(v / total * 100).toFixed(1)}%"></div>`).join('');
+bindTips(st);
+table('budget-table', ['Part', 'Bytes', 'Share'], budget.map(([n, v]) => [n, fmt(v), (v / total * 100).toFixed(1) + '%']).concat([['Total (file is 541 B after flushing the coder)', fmt(total), '100%']]));
+
+// ---- per glyph
+const G = [
+  {group: 'azara'},
+  {name: 'a (1st)', v: 13.3, copy: true, src: 'the 3rd a; only 15 pixels differ'},
+  {name: 'z', v: 28.3},
+  {name: 'a (2nd)', v: 51.8, copy: true, src: 'the 3rd a; 273 pixels differ (half-pixel shift)'},
+  {name: 'r + leaf', v: 54.6},
+  {name: 'a (3rd)', v: 101.5},
+  {group: 'healthcare'},
+  {name: 'h (1st)', v: 5.1, copy: true, src: 'the 2nd h'},
+  {name: 'e (1st)', v: 15.4, copy: true, src: 'the 2nd e'},
+  {name: 'a (1st)', v: 15.0, copy: true, src: 'the 2nd a'},
+  {name: 'l', v: 3.8}, {name: 't', v: 18.9},
+  {name: 'h (2nd)', v: 19.4}, {name: 'c', v: 35.8},
+  {name: 'a (2nd)', v: 46.1}, {name: 'r', v: 14.8}, {name: 'e (2nd)', v: 54.7}];
+G.forEach(r => { if (!r.group) r.tip = `<b>${r.name}</b><br>${fmt(r.v)} bytes` + (r.copy ? `<br>Copied from ${r.src}` : '<br>Coded from scratch'); });
+bars('glyphs', G, 101.5);
+table('glyph-table', ['Letter', 'Bytes', 'Copied from'], G.filter(r => !r.group).map(r => [r.name, fmt(r.v), r.copy ? r.src : '—']));
+
+// ---- progression
+const P = [
+  ['One 16-pixel context (like JBIG2)', 920], ['Mix 5 neighborhood sizes', 717], ['+ edge prediction from the row above', 686],
+  ['+ 4-row edge history', 647], ['+ learned count → probability tables, mixer tuning', 623], ['+ better scan order', 600], ['+ copying repeated letters', 493]];
+bars('prog', P.map(([n, v]) => ({name: n, v})), 920);
+table('prog-table', ['Model', 'Estimated bytes'], P);
+
+// ---- SVG helpers
+const NS = 'http://www.w3.org/2000/svg';
+function S(parent, tag, attrs, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  parent.appendChild(e); return e;
+}
+
+function drawAll() {
+  const ink = css('--text-primary'), sec = css('--text-secondary'), mut = css('--text-muted'), grid = css('--grid'),
+        surf = css('--surface-1'), s1 = css('--series-1'), s2 = css('--series-2'), glyph = css('--glyph'), wash = css('--wash');
+
+  // arithmetic coder examples
+  const ac = document.getElementById('ac'); ac.innerHTML = '';
+  const ex = [
+    ['Confident and right', 0.01, 0, 'Predicted 99% background; it was.', '0.014 bits'],
+    ['Fairly sure and right', 0.90, 1, 'Predicted 90% not background; it was.', '0.15 bits'],
+    ['Surprise', 0.02, 1, 'Predicted 2% not background; it was.', '5.6 bits']];
+  ex.forEach(([title, pn, actual, desc, cost], i) => {
+    const y = 14 + i * 64, x0 = 300, W = 400, wb = W * (1 - pn);
+    S(ac, 'text', {x: 0, y: y + 12, 'font-size': 14, 'font-weight': 650, fill: ink}, title);
+    S(ac, 'text', {x: 0, y: y + 31, 'font-size': 12, fill: sec}, desc);
+    S(ac, 'rect', {x: x0, y, width: wb - 1, height: 26, rx: 4, fill: actual === 0 ? s1 : grid});
+    S(ac, 'rect', {x: x0 + wb + 1, y, width: Math.max(W - wb - 1, 3), height: 26, rx: 4, fill: actual === 1 ? s1 : grid});
+    const segs = [[x0, wb, `background ${Math.round((1 - pn) * 100)}%`, actual === 0], [x0 + wb, W - wb, `not ${Math.round(pn * 100)}%`, actual === 1]];
+    segs.forEach(([sx, sw, lbl, on], j) => {
+      if (sw > lbl.length * 6.6 + 16) S(ac, 'text', {x: sx + 8, y: y + 17, 'font-size': 12, fill: on ? '#fff' : sec}, lbl);
+      else S(ac, 'text', {x: j ? x0 + W + 8 : x0 - 8, y: y + 17, 'font-size': 12, fill: sec, 'text-anchor': j ? 'start' : 'end'}, lbl);
+    });
+    S(ac, 'text', {x: 820, y: y + 17, 'font-size': 15, 'font-weight': 650, fill: ink, 'text-anchor': 'end'}, cost);
+  });
+  S(ac, 'text', {x: 300, y: 214, 'font-size': 12, fill: mut}, 'Blue = the share kept (what actually happened). Cost = −log₂(share kept).');
+  // template grid
+  const tpl = document.getElementById('tpl'); tpl.innerHTML = '';
+  const T = [
+    [[-1,-1],[-1,0],[-1,1],[0,-2],[0,-1],[-2,0]],
+    [[-2,-1],[-2,1],[-1,-2],[-1,2]],
+    [[-2,-2],[-2,2],[-1,-3],[-1,3],[0,-4],[0,-3]],
+    [[-3,-1],[-3,0],[-3,1],[-2,-3],[-2,3],[-1,-4],[-1,4],[0,-5]],
+    [[-4,0],[-3,-2],[-3,2],[-2,-4],[-2,4],[-1,-5],[-1,5],[0,-6],[-3,-3],[-3,3],[-4,-1],[-4,1]]];
+  const lvl = {}; T.forEach((g, i) => g.forEach(([dy, dx]) => lvl[dy + ',' + dx] = i));
+  const ords = [1,2,3,4,5].map(i => css('--ord-' + i));
+  const cs = 34, gx = 39, gy = 14;
+  for (let dy = -4; dy <= 0; dy++) for (let dx = -6; dx <= 6; dx++) {
+    const k = dy + ',' + dx, x = gx + (dx + 6) * (cs + 2), y = gy + (dy + 4) * (cs + 2);
+    const cur = dy === 0 && dx === 0, future = dy === 0 && dx > 0;
+    const r = S(tpl, 'rect', {x, y, width: cs, height: cs, rx: 4,
+      fill: cur ? s2 : k in lvl ? ords[lvl[k]] : future ? 'none' : surf,
+      stroke: cur || k in lvl ? 'none' : grid, 'stroke-width': 1});
+    if (k in lvl) r.setAttribute('data-tip', `In the ${[6, 10, 16, 24, 36][lvl[k]]}-pixel pattern and larger`);
+    if (cur) S(tpl, 'text', {x: x + cs / 2, y: y + cs / 2 + 6, 'text-anchor': 'middle', 'font-size': 18, 'font-weight': 700, fill: '#fff'}, '?');
+    if (future) S(tpl, 'text', {x: x + cs / 2, y: y + cs / 2 + 4, 'text-anchor': 'middle', 'font-size': 11, fill: mut}, '·');
+  }
+  bindTips(tpl);
+  document.getElementById('tpl-legend').innerHTML = ['6 nearest', '+4 → 10', '+6 → 16', '+8 → 24', '+12 → 36'].map((n, i) =>
+    `<span style="--c:var(--ord-${i + 1})">${n}</span>`).join('') + `<span style="--c:var(--series-2)">current pixel</span>`;
+
+  // edge following
+  const ed = document.getElementById('edge'); ed.innerHTML = '';
+  const edges = [10, 9, 7, 5], pred = 3, c2 = 30, ex0 = 40, ey0 = 10;
+  const rowsLbl = ['4 rows up', '3 rows up', '2 rows up', 'row above', 'current row'];
+  for (let r = 0; r < 5; r++) {
+    S(ed, 'text', {x: ex0 - 8, y: ey0 + r * (c2 + 4) + c2 / 2 + 4, 'text-anchor': 'end', 'font-size': 11, fill: mut}, '');
+    for (let c = 0; c < 14; c++) {
+      const x = ex0 + c * c2, y = ey0 + r * (c2 + 4);
+      let fill = surf, stroke = grid;
+      if (r < 4) { if (c >= edges[r]) { fill = glyph; stroke = 'none'; } }
+      else if (c < pred) { fill = surf; }
+      else if (c === pred) { fill = s2; stroke = 'none'; }
+      else { fill = 'none'; }
+      S(ed, 'rect', {x: x + 1, y, width: c2 - 2, height: c2, rx: 3, fill, stroke, 'stroke-width': 1});
+      if (r === 4 && c === pred) S(ed, 'text', {x: x + c2 / 2, y: y + c2 / 2 + 5, 'text-anchor': 'middle', 'font-size': 15, 'font-weight': 700, fill: '#fff'}, '?');
+    }
+    S(ed, 'text', {x: ex0 + 14 * c2 + 10, y: ey0 + r * (c2 + 4) + c2 / 2 + 4, 'font-size': 12, fill: sec}, rowsLbl[r]);
+  }
+  const pts = edges.map((e, r) => [ex0 + e * c2, ey0 + r * (c2 + 4) + c2 / 2]);
+  S(ed, 'polyline', {points: pts.map(p => p.join(',')).join(' '), fill: 'none', stroke: s1, 'stroke-width': 3, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'});
+  const last = pts[3], end = [ex0 + pred * c2, ey0 + 4 * (c2 + 4) + c2 / 2];
+  S(ed, 'line', {x1: last[0], y1: last[1], x2: end[0], y2: end[1], stroke: s1, 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.45});
+  pts.forEach(p => S(ed, 'circle', {cx: p[0], cy: p[1], r: 5, fill: s1, stroke: surf, 'stroke-width': 2}));
+  [-1, -2, -2].forEach((s, i) => S(ed, 'text', {x: pts[i + 1][0] - 12, y: pts[i + 1][1] - 6, 'text-anchor': 'end', 'font-size': 13, 'font-weight': 700, fill: ink, stroke: surf, 'stroke-width': 4, 'paint-order': 'stroke'}, '−' + Math.abs(s)));
+
+  // mixer
+  const mx = document.getElementById('mix'); mx.innerHTML = '';
+  const groups = [['Neighborhoods', '5 patterns: 6 … 36 pixels'], ['Edges', '5 contexts: edge position + shift history'], ['Copied letter', '3 contexts: reference pixels + agreement']];
+  groups.forEach(([t, d], i) => {
+    const y = 12 + i * 70;
+    S(mx, 'rect', {x: 0, y, width: 270, height: 56, rx: 8, fill: wash});
+    S(mx, 'text', {x: 14, y: y + 23, 'font-size': 14, 'font-weight': 650, fill: ink}, t);
+    S(mx, 'text', {x: 14, y: y + 42, 'font-size': 12, fill: sec}, d);
+    [0, 1].forEach(j => S(mx, 'line', {x1: 270, y1: y + 28, x2: 370, y2: 60 + j * 100, stroke: css('--baseline'), 'stroke-width': 1.5}));
+  });
+  [['Mixer A', 'weights picked by the', '6-pixel neighborhood'], ['Mixer B', 'weights picked by how well', 'the copy agrees locally']].forEach(([t, a, b], j) => {
+    const y = 28 + j * 100;
+    S(mx, 'rect', {x: 370, y, width: 200, height: 64, rx: 8, fill: surf, stroke: css('--baseline'), 'stroke-width': 1});
+    S(mx, 'text', {x: 384, y: y + 22, 'font-size': 14, 'font-weight': 650, fill: ink}, t);
+    S(mx, 'text', {x: 384, y: y + 40, 'font-size': 11.5, fill: sec}, a);
+    S(mx, 'text', {x: 384, y: y + 55, 'font-size': 11.5, fill: sec}, b);
+    S(mx, 'line', {x1: 570, y1: y + 32, x2: 630, y2: 110, stroke: css('--baseline'), 'stroke-width': 1.5});
+  });
+  S(mx, 'circle', {cx: 650, cy: 110, r: 20, fill: s1});
+  S(mx, 'text', {x: 650, y: 115, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 700, fill: '#fff'}, 'avg');
+  S(mx, 'line', {x1: 670, y1: 110, x2: 700, y2: 110, stroke: css('--baseline'), 'stroke-width': 1.5});
+  S(mx, 'text', {x: 708, y: 104, 'font-size': 14, 'font-weight': 650, fill: ink}, 'P(not bg)');
+  S(mx, 'text', {x: 708, y: 122, 'font-size': 12, fill: sec}, '→ arithmetic coder');
+  S(mx, 'text', {x: 370, y: 212, 'font-size': 11.5, fill: mut}, 'After each pixel, both mixers nudge their weights toward the inputs that were right.');
+}
+drawAll();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawAll);
+</script>
+</body>
+</html>

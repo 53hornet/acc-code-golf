@@ -101,15 +101,16 @@ def gamma(cd, v=0):  # Elias gamma code for v >= 0
     return num(cd, m - 1, v + 1 - (1 << (m - 1))) + (1 << (m - 1)) - 1
 
 
-def code_header(cd, w=0, h=0, maxval=0, pal=(0,), o=0):
+def code_header(cd, w=0, h=0, maxval=0, pal=(0,), o=0, c=1):
     w, h, maxval = gamma(cd, w), gamma(cd, h), gamma(cd, maxval)
+    c = 1 + 2 * num(cd, 1, c > 1)  # channels: 1 (P2 grey) or 3 (P3 colour)
     k = gamma(cd, len(pal) - 1) + 1
-    out = [num(cd, maxval.bit_length(), pal[0])]  # background value, then the rest ascending
+    out = [num(cd, ((maxval + 1) ** c - 1).bit_length(), pal[0])]  # background value, then the rest ascending
     prev = -1
     for i in range(1, k):
         prev += 1 + gamma(cd, pal[i] - prev - 1 if i < len(pal) else 0)
         out.append(prev)
-    return w, h, maxval, out, num(cd, 3, o)
+    return w, h, maxval, out, num(cd, 3, o), c
 
 
 def code_refs(cd, h, w, refs=()):
@@ -341,9 +342,9 @@ def process(cd, h, w, k, refs, img=None):
 
 
 def encode(args):
-    grid, w, h, maxval, pal, o = args
+    grid, w, h, maxval, pal, o, c = args
     cd = Coder()
-    code_header(cd, w, h, maxval, pal, o)
+    code_header(cd, w, h, maxval, pal, o, c)
     g = orient(grid, o)
     H, W = len(g), len(g[0])
     refs = code_refs(cd, H, W, find_refs([[int(v != 0) for v in r] for r in g]))
@@ -353,25 +354,29 @@ def encode(args):
 
 def compress(src, dst):
     t = b"".join(l.split(b"#")[0] + b"\n" for l in open(src, "rb").read().splitlines()).split()
+    c = 3 if t[0] == b"P3" else 1
     w, h, maxval = map(int, t[1:4])
-    vals = list(map(int, t[4:4 + w * h]))
+    n, M = list(map(int, t[4:4 + w * h * c])), maxval + 1
+    vals = [sum(n[i + j] * M ** (c - 1 - j) for j in range(c)) for i in range(0, w * h * c, c)]  # RGB packed into one int
     cnt = Counter(vals)
     bg = max(cnt, key=lambda v: (cnt[v], -v))
     pal = [bg] + sorted(v for v in cnt if v != bg)
     ix = {v: i for i, v in enumerate(pal)}
     grid = [[ix[v] for v in vals[y * w:(y + 1) * w]] for y in range(h)]
     with Pool(8) as pool:  # try all 8 flips/rotations, keep the smallest
-        outs = pool.map(encode, [(grid, w, h, maxval, pal, o) for o in range(8)])
+        outs = pool.map(encode, [(grid, w, h, maxval, pal, o, c) for o in range(8)])
     open(dst, "wb").write(min(outs, key=len))
 
 
 def decompress(src, dst):
     cd = Coder(open(src, "rb").read())
-    w, h, maxval, pal, o = code_header(cd)
+    w, h, maxval, pal, o, c = code_header(cd)
     H, W = (w, h) if o & 4 else (h, w)
     g = unorient(process(cd, H, W, len(pal), code_refs(cd, H, W)), o)
-    body = "\n".join(" ".join(str(pal[v]) for v in r) for r in g)
-    open(dst, "w", newline="\n").write(f"P2\n{w} {h}\n{maxval}\n{body}\n")
+    M = maxval + 1
+    ps = [" ".join(str(v // M ** (c - 1 - j) % M) for j in range(c)) for v in pal]
+    body = "\n".join(" ".join(ps[v] for v in r) for r in g)
+    open(dst, "w", newline="\n").write(f"P{2 if c == 1 else 3}\n{w} {h}\n{maxval}\n{body}\n")
 
 
 if __name__ == "__main__":
