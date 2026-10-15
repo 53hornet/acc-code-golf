@@ -89,6 +89,7 @@ namespace Azara.CodeGolf2026
             // Each pixel becomes an index into a palette of distinct colors, so gray and color images compress the same way.
             // Index 3 is reserved for the repeat marker, so only 3 colors fit.
             palette = new List<int[]>();
+            var indexes = new List<int>();
             foreach (var pixel in numbers.Chunk(channels))
             {
                 var index = palette.FindIndex(p => p.SequenceEqual(pixel));
@@ -101,8 +102,12 @@ namespace Azara.CodeGolf2026
                     palette.Add(pixel);
                     index = palette.Count - 1;
                 }
-                pixels.Enqueue(index);
+                indexes.Add(index);
             }
+
+            // Store each pixel relative to the one above it (mod 3), so rows that match the row above become long runs of 0
+            var width = dimensions.Width;
+            pixels = new Queue<int>(indexes.Select((p, i) => i < width ? p : (p - indexes[i - width] + 3) % 3));
 
             int block = 0;
             int current = 0;
@@ -110,7 +115,7 @@ namespace Azara.CodeGolf2026
             while (pixels.Any())
             {
                 int pixel = pixels.Dequeue();
-                if (current != pixel || block > 62)
+                if (current != pixel || block > 63)
                 {
                     values.Add(new Tuple<int, int>(current, block + 1));
                     //Console.WriteLine(current + ":" + (block + 1));
@@ -157,7 +162,7 @@ namespace Azara.CodeGolf2026
                 // the first 2 bits are the palette index (or 3 for a repeat marker)
                 // the second 6 bits is the sequence length
 
-                var packedValue = (tuple.Item1 << 6) | ((tuple.Item2 - 1) & 0x3F);
+                var packedValue = (tuple.Item1 << 6) | ((tuple.Item2 - (tuple.Item1 == 3 ? 1 : 2)) & 0x3F);
                 writer.Write((byte)packedValue);
             }
 
@@ -191,7 +196,7 @@ namespace Azara.CodeGolf2026
             {
                 var packedValue = reader.ReadByte();
                 var colorIndex = (packedValue >> 6) & 0x03; // Extract the first 2 bits
-                var sequenceLength = (packedValue & 0x3F) + 1; // Extract the last 6 bits
+                var sequenceLength = (packedValue & 0x3F) + (colorIndex == 3 ? 1 : 2); // Extract the last 6 bits
 
                 pixelSequences.Add(Tuple.Create(colorIndex, sequenceLength));
             }
@@ -221,7 +226,7 @@ namespace Azara.CodeGolf2026
                 var current = items[i];
                 int count = 1;
 
-                while (i + count < items.Count && items[i + count].SequenceEqual(current) && count < 63)
+                while (i + count < items.Count && items[i + count].SequenceEqual(current) && count < 65)
                 {
                     count++;
                 }
@@ -266,7 +271,15 @@ namespace Azara.CodeGolf2026
                 writer.WriteLine($"255");
 
                 // Expand the runs back into palette colors, and write one image row per line so the output is easy to check
-                var numbers = colorsSample.SelectMany(t => Enumerable.Repeat(palette[t.Item1], t.Item2 - 1)).SelectMany(p => p);
+                var indexes = colorsSample.SelectMany(t => Enumerable.Repeat(t.Item1, t.Item2 - 1)).ToList();
+
+                // Undo the vertical prediction, top row down
+                for (int i = dimensions.Width; i < indexes.Count; i++)
+                {
+                    indexes[i] = (indexes[i] + indexes[i - dimensions.Width]) % 3;
+                }
+
+                var numbers = indexes.SelectMany(i => palette[i]);
                 foreach (var row in numbers.Chunk(dimensions.Width * channels))
                 {
                     writer.WriteLine(string.Join(" ", row));

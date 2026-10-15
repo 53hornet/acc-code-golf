@@ -117,34 +117,62 @@ namespace Azara.CodeGolf2026.Tests
         }
 
         // Lengths chosen to sit on either side of every cap:
-        // 63 pixels per run, 63 runs per marker (3969 px), 63 markers per super marker (250047 px)
+        // Lengths chosen to sit on either side of every cap:
+        // 64 pixels per run, 65 runs per marker (4160 px), 65 markers per super marker (270400 px).
+        // A single row has no row above to predict from, so the zero run reaches the encoder exactly as-is.
         [Theory]
         [InlineData(1)]
-        [InlineData(62)]
         [InlineData(63)]
         [InlineData(64)]
-        [InlineData(127)]
-        [InlineData(63 * 63 - 1)]
-        [InlineData(63 * 63)]
-        [InlineData(63 * 63 + 1)]
-        [InlineData(63 * 63 * 2)]
-        [InlineData(63 * 63 * 2 + 64)]
-        [InlineData(63 * 63 * 63)]
-        [InlineData(63 * 63 * 63 + 1)]
-        [InlineData(63 * 63 * 63 * 2 + 17)]
-        public void TrailingZeroRun_RoundTrips(int length)
+        [InlineData(65)]
+        [InlineData(129)]
+        [InlineData(64 * 65 - 1)]
+        [InlineData(64 * 65)]
+        [InlineData(64 * 65 + 1)]
+        [InlineData(64 * 65 * 2)]
+        [InlineData(64 * 65 * 2 + 65)]
+        public void SingleRowZeroRun_RoundTrips(int length)
         {
-            // Pad the front with a little color so the image is rectangular and the zero run ends the file, like the real image
-            const int width = 1000;
-            var height = (length + width) / width;
-            var pixels = Enumerable.Repeat(80, width * height - length).Concat(new int[length]).ToArray();
-            AssertRoundTrips(pixels, width, height);
+            // Lead with a little color so the zero run ends the file, like the real image
+            var pixels = new[] { 80, 133 }.Concat(new int[length]).ToArray();
+            AssertRoundTrips(pixels, pixels.Length, 1);
+        }
+
+        // A solid image predicts to all zeros, so these hit the super marker cap (270400 = 520 x 520)
+        [Theory]
+        [InlineData(519, 521)]
+        [InlineData(520, 520)]
+        [InlineData(521, 520)]
+        [InlineData(1040, 520)]
+        [InlineData(1041, 521)]
+        public void SolidImage_RoundTrips(int width, int height)
+        {
+            AssertRoundTrips(new int[width * height], width, height);
         }
 
         [Fact]
-        public void SolidImage_RoundTrips()
+        public void TrailingZeroRows_RoundTrips()
         {
-            AssertRoundTrips(new int[640 * 400], 640, 400);
+            // Color above a large black area, like the bottom margin of the real image
+            const int width = 1000;
+            var pixels = Enumerable.Repeat(80, width * 3 + 17).Concat(new int[width * 300 - 17]).ToArray();
+            AssertRoundTrips(pixels, width, 303);
+        }
+
+        [Fact]
+        public void VerticalStripes_RoundTrip()
+        {
+            // Every row is the same, so everything after the first row predicts to 0, and all 3 colors take part
+            int[] row = [.. Enumerable.Repeat(0, 50), .. Enumerable.Repeat(80, 30), .. Enumerable.Repeat(133, 20)];
+            AssertRoundTrips([.. Enumerable.Repeat(row, 200).SelectMany(r => r)], row.Length, 200);
+        }
+
+        [Fact]
+        public void Diagonal_RoundTrips()
+        {
+            // Edges that shift every row, so the prediction differs from the pixel above along the edge
+            var pixels = Enumerable.Range(0, 300 * 200).Select(i => (i % 300 + i / 300) / 25 % 3 * 80).ToArray();
+            AssertRoundTrips(pixels, 300, 200);
         }
 
         [Fact]
@@ -198,14 +226,14 @@ namespace Azara.CodeGolf2026.Tests
         [Fact]
         public void SuperSequence_OnlyMergesIdenticalRepeatCounts()
         {
-            // 63 + 63 + 11 copies of the same run -> level 1: M62 S, M62 S, M10 S
+            // 65 + 65 + 11 copies of the same run -> level 1: M64 S, M64 S, M10 S
             var run = Tuple.Create(0, 64);
-            var items = Items(Enumerable.Repeat(run, 63 + 63 + 11).ToArray());
+            var items = Items(Enumerable.Repeat(run, 65 + 65 + 11).ToArray());
 
             var stream = Program.CollapseRepeats(Program.CollapseRepeats(items)).SelectMany(i => i).ToList();
 
-            // level 2: M1 M62 S (two copies of "M62 S"), then M10 S stays as-is
-            List<Tuple<int, int>> expected = [Tuple.Create(3, 1), Tuple.Create(3, 62), run, Tuple.Create(3, 10), run];
+            // level 2: M1 M64 S (two copies of "M64 S"), then M10 S stays as-is
+            List<Tuple<int, int>> expected = [Tuple.Create(3, 1), Tuple.Create(3, 64), run, Tuple.Create(3, 10), run];
             Assert.Equal(expected, stream);
             Assert.Equal(items.SelectMany(i => i), Expand(stream));
         }
@@ -237,7 +265,8 @@ namespace Azara.CodeGolf2026.Tests
             var stream = Program.CollapseRepeats(Program.CollapseRepeats(items)).SelectMany(i => i).ToList();
 
             Assert.Equal(runs, Expand(stream));
-            Assert.All(stream, t => Assert.InRange(t.Item2, 1, 64));
+            // Markers must fit in 6 bits as count - 1 (1..64)
+            Assert.All(stream.Where(t => t.Item1 == 3), t => Assert.InRange(t.Item2, 1, 64));
         }
     }
 }
