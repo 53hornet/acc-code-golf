@@ -45,17 +45,36 @@ List<PixelGrouping> ProcessPgmRow(List<string> row)
     return pixelGroupings;
 }
 
-const string relativePathToBaseRepo = "../../../../../";
-string inputPath = Path.Combine(relativePathToBaseRepo, "azara.pgm");
-string outputPath = Path.Combine(relativePathToBaseRepo, "azara.compressed.pgm");
+void WritePgmFile(string path, (int Width, int Height, int MaxValue, int[][] Pixels) image)
+{
+    using var writer = new StreamWriter(path);
+    writer.WriteLine("P2");
+    writer.WriteLine($"{image.Width} {image.Height}");
+    writer.WriteLine(image.MaxValue);
+    foreach (var row in image.Pixels)
+    {
+        writer.WriteLine(string.Join(' ', row));
+    }
+}
 
-var file = ReadPgmFile(inputPath);
+string command = args[0].ToLowerInvariant();
+string inputPath = args[1];
+string outputPath = args[2];
 
-HuffmanCodec.Write(outputPath, file);
-var decoded = HuffmanCodec.Read(outputPath);
-var expected = file.Rows.Select(r => r.SelectMany(g => Enumerable.Repeat(g.Value, g.Count)).ToArray()).ToArray();
-bool huffmanRoundTrips = decoded.Pixels.Length == expected.Length
-    && decoded.Pixels.Zip(expected).All(p => p.First.SequenceEqual(p.Second));
+if (!File.Exists(inputPath))
+{
+    Console.Error.WriteLine($"Input file not found: {inputPath}");
+    return 1;
+}
 
-Console.WriteLine($"Original PGM:   {new FileInfo(inputPath).Length,9:N0} bytes");
-Console.WriteLine($"Huffman RLE:    {new FileInfo(outputPath).Length,9:N0} bytes (round trip OK: {huffmanRoundTrips})");
+switch (command)
+{
+    case "encode":
+        HuffmanCodec.Write(outputPath, ReadPgmFile(inputPath));
+        break;
+    case "decode":
+        //WritePgmFile(outputPath, HuffmanCodec.Read(inputPath));
+        break;
+}
+
+return 0;
